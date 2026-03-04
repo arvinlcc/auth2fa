@@ -1,14 +1,12 @@
+# build.yml
 name: Build
-
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
-
 permissions:
   contents: read
-
 jobs:
   build:
     strategy:
@@ -17,27 +15,14 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
-            target: 'aarch64-apple-darwin,x86_64-apple-darwin'
-            artifact_name: 'macos-universal'
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-            target: 'aarch64-apple-darwin'
-            artifact_name: 'macos-aarch64'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-            target: 'x86_64-apple-darwin'
-            artifact_name: 'macos-x64'
+            artifact-name: 'macos-universal'
           - platform: 'ubuntu-latest'
             args: ''
-            target: ''
-            artifact_name: 'linux-amd64'
+            artifact-name: 'linux-x86_64'
           - platform: 'windows-latest'
             args: ''
-            target: ''
-            artifact_name: 'windows-x64'
-
+            artifact-name: 'windows-x86_64'
     runs-on: ${{ matrix.platform }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -59,22 +44,48 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: 'src-tauri -> target'
+          workspaces: './src-tauri -> target'
 
       - name: Install frontend dependencies
         run: npm ci
 
+      # ✅ 删除当前 workflow run 中的同名旧 artifact（避免重试时 409 冲突）
+      - name: Delete existing artifact if exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifactName = '${{ matrix.artifact-name }}';
+            const runId = ${{ github.run_id }};
+            try {
+              const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId,
+              });
+              const existing = artifacts.filter(a => a.name === artifactName);
+              for (const artifact of existing) {
+                console.log(`Deleting artifact: ${artifact.name} (id: ${artifact.id})`);
+                await github.rest.actions.deleteArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: artifact.id,
+                });
+              }
+            } catch (e) {
+              console.log('No existing artifact to delete or error:', e.message);
+            }
+
       - name: Build and upload artifacts
-        uses: tauri-apps/tauri-action@dev
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
-          uploadWorkflowArtifacts: true
-          workflowArtifactNamePattern: '${{ matrix.artifact_name }}'
+          uploadArtifacts: true
+          artifactName: ${{ matrix.artifact-name }}
