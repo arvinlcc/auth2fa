@@ -67,13 +67,13 @@ jobs:
         run: npm ci
 
       - name: Build and upload artifacts
-        # 修复：建议使用 v0 稳定版
-        uses: tauri-apps/tauri-action@v0
+        # 使用 dev 分支以获得 uploadWorkflowArtifacts 功能
+        uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
           uploadWorkflowArtifacts: true
-          # 修复：建议让 pattern 包含 target 以便 release.yml 识别
-          workflowArtifactNamePattern: 'artifact-${{ matrix.platform }}-${{ matrix.target }}'
+          # 自定义 artifact 命名，让 release.yml 更容易识别
+          workflowArtifactNamePattern: '${{ matrix.platform }}-${{ matrix.target }}'
