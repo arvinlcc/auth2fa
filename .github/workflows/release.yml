@@ -43,10 +43,11 @@ jobs:
           draft: false
           generate_release_notes: true
           files: |
-            ./artifacts/macos-universal/**/*
-            ./artifacts/macos-aarch64/**/*
-            ./artifacts/macos-x86_64/**/*
-            ./artifacts/linux/**/*
-            ./artifacts/windows/**/*
+            ./artifacts/darwin-aarch64/**/*
+            ./artifacts/darwin-universal/**/*
+            ./artifacts/darwin-x64/**/*
+            ./artifacts/linux-amd64/**/*
+            ./artifacts/linux-x86_64/**/*
+            ./artifacts/windows-x64/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
