@@ -1,3 +1,4 @@
+# build.yml
 name: Build
 on:
   push:
@@ -53,35 +54,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Delete existing artifact if exists
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const artifactName = '${{ matrix.artifact-name }}';
-            try {
-              const { data: { artifacts } } = await github.rest.actions.listWorkflowRunArtifacts({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: ${{ github.run_id }},
-              });
-              for (const a of artifacts.filter(a => a.name === artifactName)) {
-                console.log(`Deleting: ${a.name} (${a.id})`);
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: a.id,
-                });
-              }
-            } catch (e) {
-              console.log('Nothing to delete:', e.message);
-            }
-
-      - name: Build and upload artifacts
-        uses: tauri-apps/tauri-action@v0
+      - name: Build and upload workflow artifacts
+        uses: tauri-apps/tauri-action@dev          # ✅ dev 版才支持 uploadWorkflowArtifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
-          uploadWorkflowArtifacts: true                          # ✅ 正确参数名
-          workflowArtifactNamePattern: ${{ matrix.artifact-name }}  # ✅ 固定名称，避免冲突
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: ${{ matrix.artifact-name }}

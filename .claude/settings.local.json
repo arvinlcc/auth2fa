@@ -25,7 +25,16 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(git tag:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "mcp__github__get_me",
+      "mcp__github__list_pull_requests",
+      "Bash(gh run view:*)",
+      "Bash(gh workflow run:*)",
+      "mcp__github__list_tags",
+      "Bash(gh:*)",
+      "WebSearch",
+      "mcp__github__search_repositories",
+      "mcp__github__get_file_contents"
     ]
   }
 }
