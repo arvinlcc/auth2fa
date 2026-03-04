@@ -17,19 +17,14 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
-            artifact_name: 'macos-universal'
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
-            artifact_name: 'macos-aarch64'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
-            artifact_name: 'macos-x86_64'
           - platform: 'ubuntu-latest'
             args: ''
-            artifact_name: 'linux'
           - platform: 'windows-latest'
             args: ''
-            artifact_name: 'windows'
 
     runs-on: ${{ matrix.platform }}
 
@@ -64,31 +59,13 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Set target triple
-        id: target
-        run: |
-          if [ "${{ matrix.args }}" == "--target universal-apple-darwin" ]; then
-            echo "value=universal-apple-darwin" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.args }}" == "--target aarch64-apple-darwin" ]; then
-            echo "value=aarch64-apple-darwin" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.args }}" == "--target x86_64-apple-darwin" ]; then
-            echo "value=x86_64-apple-darwin" >> $GITHUB_OUTPUT
-          elif [ "${{ matrix.platform }}" == "ubuntu-latest" ]; then
-            echo "value=release" >> $GITHUB_OUTPUT
-          else
-            echo "value=release" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-
-      - name: Build application
-        run: npm run tauri build -- ${{ matrix.args }}
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Build and upload artifacts
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: ${{ matrix.artifact_name }}
-          path: |
-            src-tauri/target/${{ steps.target.outputs.value }}/bundle/**/*
-            src-tauri/target/release/bundle/**/*
-          retention-days: 30
-          if-no-files-found: warn
+          tauriScript: npm run tauri
+          args: ${{ matrix.args }}
+          # Omit tagName, releaseName and releaseId to prevent release creation
+          uploadWorkflowArtifacts: true
+          workflowArtifactNamePattern: '[platform]-[arch]'
