@@ -87,6 +87,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: src-tauri/target/${{ steps.target.outputs.value }}/bundle/
+          path: |
+            src-tauri/target/${{ steps.target.outputs.value }}/bundle/**/*
+            src-tauri/target/release/bundle/**/*
           retention-days: 30
-          if-no-files-found: error
+          if-no-files-found: warn
