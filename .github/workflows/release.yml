@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       build_run_id:
-        description: 'Build workflow run ID (from Actions page URL)'
+        description: 'Build workflow run ID'
         required: true
         type: string
       tag:
-        description: 'Tag name to release (e.g., v1.0.8)'
+        description: 'Tag name to release'
         required: true
         type: string
 
@@ -29,6 +29,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+          # 修复：如果你是从另一个 workflow 下载，需要此 token
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.build_run_id }}
 
@@ -36,18 +37,21 @@ jobs:
         run: ls -R ./artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        # 修复：更新到 v2
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag }}
           name: '2FA Authenticator ${{ inputs.tag }}'
           draft: false
+          prerelease: false
           generate_release_notes: true
+          # 修复：使用更宽泛的匹配模式，确保能抓到各种格式安装包
           files: |
-            ./artifacts/darwin-aarch64/**/*
-            ./artifacts/darwin-universal/**/*
-            ./artifacts/darwin-x64/**/*
-            ./artifacts/linux-amd64/**/*
-            ./artifacts/linux-x86_64/**/*
-            ./artifacts/windows-x64/**/*
+            ./artifacts/**/*.deb
+            ./artifacts/**/*.appimage
+            ./artifacts/**/*.msi
+            ./artifacts/**/*.exe
+            ./artifacts/**/*.dmg
+            ./artifacts/**/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

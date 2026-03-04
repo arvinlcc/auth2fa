@@ -17,14 +17,19 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
+            target: 'universal-apple-darwin'
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
+            target: 'aarch64-apple-darwin'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
+            target: 'x86_64-apple-darwin'
           - platform: 'ubuntu-latest'
             args: ''
+            target: ''
           - platform: 'windows-latest'
             args: ''
+            target: ''
 
     runs-on: ${{ matrix.platform }}
 
@@ -49,23 +54,26 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          # 修复：仅安装当前 matrix 任务需要的 target
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          # 确保路径指向你 tauri 文件夹下的 target
+          workspaces: 'src-tauri -> target'
 
       - name: Install frontend dependencies
         run: npm ci
 
       - name: Build and upload artifacts
-        uses: tauri-apps/tauri-action@dev
+        # 修复：建议使用 v0 稳定版
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
-          # Omit tagName, releaseName and releaseId to prevent release creation
           uploadWorkflowArtifacts: true
-          workflowArtifactNamePattern: '[platform]-[arch]'
+          # 修复：建议让 pattern 包含 target 以便 release.yml 识别
+          workflowArtifactNamePattern: 'artifact-${{ matrix.platform }}-${{ matrix.target }}'
