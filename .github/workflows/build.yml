@@ -17,7 +17,7 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
-            target: 'universal-apple-darwin'
+            target: 'aarch64-apple-darwin,x86_64-apple-darwin'
             artifact_name: 'macos-universal'
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
