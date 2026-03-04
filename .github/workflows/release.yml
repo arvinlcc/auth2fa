@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Build workflow run ID (from Actions page URL)'
+        required: true
+        type: string
+      tag:
+        description: 'Tag name to release (e.g., v1.0.8)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.build_run_id }}
+
+      - name: Display structure of downloaded files
+        run: ls -R ./artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: '2FA Authenticator ${{ inputs.tag }}'
+          draft: false
+          generate_release_notes: true
+          files: |
+            ./artifacts/macos-universal/**/*
+            ./artifacts/macos-aarch64/**/*
+            ./artifacts/macos-x86_64/**/*
+            ./artifacts/linux/**/*
+            ./artifacts/windows/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
