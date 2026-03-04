@@ -26,7 +26,7 @@ jobs:
             args: '--target x86_64-apple-darwin'
             name: 'macos-x64'
           # Linux
-          - platform: 'ubuntu-20.04'
+          - platform: 'ubuntu-latest'
             args: ''
             name: 'linux'
           # Windows
