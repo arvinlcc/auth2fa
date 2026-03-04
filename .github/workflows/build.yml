@@ -66,33 +66,7 @@ jobs:
         with:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
-
-  release:
-    name: Release
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          pattern: '*'
-          merge-multiple: false
-
-      - name: Display structure of downloaded files
-        run: ls -R artifacts
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*/bundle/*
-          draft: true
-          generate_release_notes: true
-          fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tagName: ${{ github.ref_name }}
+          releaseName: '2FA Authenticator ${{ github.ref_name }}'
+          releaseDraft: false
+          generateReleaseNotes: true
