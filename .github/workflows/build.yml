@@ -18,18 +18,23 @@ jobs:
           - platform: 'macos-latest'
             args: '--target universal-apple-darwin'
             target: 'universal-apple-darwin'
+            artifact_name: 'macos-universal'
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
             target: 'aarch64-apple-darwin'
+            artifact_name: 'macos-aarch64'
           - platform: 'macos-latest'
             args: '--target x86_64-apple-darwin'
             target: 'x86_64-apple-darwin'
+            artifact_name: 'macos-x64'
           - platform: 'ubuntu-latest'
             args: ''
             target: ''
+            artifact_name: 'linux-amd64'
           - platform: 'windows-latest'
             args: ''
             target: ''
+            artifact_name: 'windows-x64'
 
     runs-on: ${{ matrix.platform }}
 
@@ -54,20 +59,17 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-          # 修复：仅安装当前 matrix 任务需要的 target
           targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          # 确保路径指向你 tauri 文件夹下的 target
           workspaces: 'src-tauri -> target'
 
       - name: Install frontend dependencies
         run: npm ci
 
       - name: Build and upload artifacts
-        # 使用 dev 分支以获得 uploadWorkflowArtifacts 功能
         uses: tauri-apps/tauri-action@dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,5 +77,4 @@ jobs:
           tauriScript: npm run tauri
           args: ${{ matrix.args }}
           uploadWorkflowArtifacts: true
-          # 自定义 artifact 命名，让 release.yml 更容易识别
-          workflowArtifactNamePattern: '${{ matrix.platform }}-${{ matrix.target }}'
+          workflowArtifactNamePattern: '${{ matrix.artifact_name }}'
